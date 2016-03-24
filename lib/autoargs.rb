@@ -1,3 +1,4 @@
+require 'autoargs/version'
 require 'parser/current'
 
 module Autoargs

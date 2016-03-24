@@ -52,7 +52,12 @@ module Autoargs
                 ].flatten(1).join(" "))
             end
 
-            method.call(*ARGV.slice(0, args.length + optargs.length), **argv_kwoptargs)
+            positionals = ARGV.slice(0, args.length + optargs.length)
+            if argv_kwoptargs.keys.length != 0
+                method.call(*positionals, **argv_kwoptargs)
+            else
+                method.call(*positionals)
+            end
         end
     end
 end

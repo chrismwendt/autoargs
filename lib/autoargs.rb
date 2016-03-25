@@ -45,6 +45,7 @@ module Autoargs
                     .map do |name_with_prefix, value|
                         begin
                             raise "Expected argument " + name_with_prefix + " to start with --." unless name_with_prefix.start_with?("--")
+                            raise "Expected value for argument " + name_with_prefix if value.nil?
                             name = name_with_prefix[2 .. -1]
                             raise name + " is not an option." unless kwoptargs.has_key?(name.to_sym)
                             [name.to_sym, value]

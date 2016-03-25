@@ -31,26 +31,33 @@ module Autoargs
                     .map do |arg| [arg.children[0], arg.children[1].children[0]] end
             ]
 
+            usage = [[caller_file],
+                args.map do |arg| "<" + arg.to_s + ">" end,
+                optargs.map do |optarg| "[" + optarg[:name].to_s + "=" + optarg[:default].inspect + "]" end,
+                kwoptargs.map do |name, default| "[--" + name.to_s + " " + default.inspect + "]" end
+            ].flatten(1).join(" ")
+
             argv_args = ARGV[0 ... args.length]
             argv_optargs = ARGV[args.length ... args.length + optargs.length]
             argv_kwoptargs = Hash[
                 (ARGV[args.length + optargs.length .. -1] || [])
                     .each_slice(2)
                     .map do |name_with_prefix, value|
-                        abort("Expected argument " + name_with_prefix + " to start with --.") unless name_with_prefix.start_with?("--")
-                        name = name_with_prefix[2 .. -1]
-                        abort(name + " is not an option.") unless kwoptargs.has_key?(name.to_sym)
-                        [name.to_sym, value]
+                        begin
+                            raise "Expected argument " + name_with_prefix + " to start with --." unless name_with_prefix.start_with?("--")
+                            name = name_with_prefix[2 .. -1]
+                            raise name + " is not an option." unless kwoptargs.has_key?(name.to_sym)
+                            [name.to_sym, value]
+                        rescue Exception => e
+                            puts(e.message)
+                            puts
+                            puts(usage)
+                            abort
+                        end
                     end
             ]
 
-            if argv_args.length < args.length
-                abort([[caller_file],
-                    args.map do |arg| "<" + arg.to_s + ">" end,
-                    optargs.map do |optarg| "[" + optarg[:name].to_s + "=" + optarg[:default].inspect + "]" end,
-                    kwoptargs.map do |name, default| "[--" + name.to_s + " " + default.inspect + "]" end
-                ].flatten(1).join(" "))
-            end
+            abort(usage) if argv_args.length < args.length
 
             positionals = ARGV.slice(0, args.length + optargs.length)
             if argv_kwoptargs.keys.length != 0

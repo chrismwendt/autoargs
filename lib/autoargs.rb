@@ -1,5 +1,19 @@
+def self.silently
+    begin
+        orig_stdout = $stdout.dup
+        orig_stderr = $stderr.dup
+        $stdout.reopen('/dev/null', 'w')
+        $stderr.reopen('/dev/null', 'w')
+        r = yield
+    ensure
+        $stdout.reopen(orig_stdout)
+        $stderr.reopen(orig_stderr)
+    end
+    r
+end
+
 require 'autoargs/version'
-require 'parser/current'
+silently { require 'parser/current' } # silence warnings
 
 module Autoargs
     def self.run(method)
